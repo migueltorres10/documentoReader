@@ -17,7 +17,7 @@ namespace PdfReaderApp.Services
             _numeroParser = new NumeroParser();
         }
 
-        public DocumentoDados Extrair(string texto)
+        public DocumentoDados ExtrairDados(string texto)
         {
             var numero = _numeroParser.ExtrairNumero(texto);
             var nifFornecedor = _fornecedorParser.ExtrairFornecedor(texto);
