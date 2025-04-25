@@ -3,10 +3,8 @@ using Microsoft.Extensions.Hosting;
 using PdfReaderApp.Services;
 using dotenv.net;
 
-// Carrega o .env se existir
 DotEnv.Load();
 
-// 🔥 Aqui construímos o Host
 var builder = Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
     {
@@ -17,7 +15,6 @@ var builder = Host.CreateDefaultBuilder(args)
 
 var app = builder.Build();
 
-// 🔥 Aqui criamos o scope para resolver os serviços
 using (var scope = app.Services.CreateScope())
 {
     var pdfService = scope.ServiceProvider.GetRequiredService<PdfService>();
@@ -31,40 +28,54 @@ using (var scope = app.Services.CreateScope())
     {
         try
         {
+            string textoExtraido = "";
+
             if (caminho.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
             {
-                var texto = pdfService.LerTextoPdf(caminho);
+                textoExtraido = pdfService.LerTextoPdf(caminho);
 
-                if (string.IsNullOrWhiteSpace(texto))
+                if (string.IsNullOrWhiteSpace(textoExtraido))
                 {
                     Console.WriteLine("⚠️ PDF não tem texto! Fazendo OCR das páginas...");
 
                     var imagens = pdfToImageService.ConverterPdfParaImagens(caminho);
-                    texto = "";
-
                     foreach (var imgPath in imagens)
                     {
-                        texto += ocrService.LerTextoImagem(imgPath) + "\n";
-                        File.Delete(imgPath); // apaga imagens temporárias
+                        textoExtraido += ocrService.LerTextoImagem(imgPath) + "\n";
+                        File.Delete(imgPath);
                     }
                 }
-
-                Console.WriteLine("\n📄 Texto extraído:");
-                Console.WriteLine("---------------------------------------------------");
-                Console.WriteLine(texto);
             }
             else if (caminho.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
                      caminho.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase))
             {
-                var texto = ocrService.LerTextoImagem(caminho);
-                Console.WriteLine("\n🧠 Texto extraído da imagem:");
-                Console.WriteLine("----------------------------------------------");
-                Console.WriteLine(texto);
+                textoExtraido = ocrService.LerTextoImagem(caminho);
             }
             else
             {
                 Console.WriteLine("❌ Tipo de arquivo não suportado.");
+                return;
             }
+
+            // 🔍 Limpeza do texto OCR
+            var textoLimpo = TextoUtils.LimparTextoOcr(textoExtraido);
+
+            Console.WriteLine("\n🧼 Texto limpo:");
+            Console.WriteLine("---------------------------------------------------");
+            Console.WriteLine(textoLimpo);
+
+            var parser = new FaturaParserService();
+            var resultado = parser.Extrair(textoLimpo);
+
+            Console.WriteLine("\n🔎 Dados sugeridos:");
+            Console.WriteLine($"Número da Fatura: {resultado.numero}");
+            Console.WriteLine($"NIF:              {resultado.nif}");
+            Console.WriteLine($"Data:             {resultado.data?.ToShortDateString()}");
+            Console.WriteLine($"Total:            {resultado.total?.ToString("F2")} EUR");
+
+            // Aqui poderá futuramente abrir UI para revisão/edição!
+            Console.WriteLine("\n✅ Confirme os dados acima no seu sistema visual.");
+
         }
         catch (Exception ex)
         {

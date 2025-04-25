@@ -110,3 +110,4 @@ C:\PdfReaderApp\obj\Debug\net8.0-windows\refint\PdfReaderApp.dll
 C:\PdfReaderApp\obj\Debug\net8.0-windows\PdfReaderApp.pdb
 C:\PdfReaderApp\obj\Debug\net8.0-windows\PdfReaderApp.genruntimeconfig.cache
 C:\PdfReaderApp\obj\Debug\net8.0-windows\ref\PdfReaderApp.dll
+C:\PdfReaderApp\obj\Debug\net8.0-windows\PdfReaderApp.sourcelink.json

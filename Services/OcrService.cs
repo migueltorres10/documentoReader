@@ -15,4 +15,5 @@ namespace PdfReaderApp.Services
             return page.GetText();
         }
     }
+
 }
